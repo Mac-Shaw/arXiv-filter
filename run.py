@@ -2,6 +2,8 @@ import sys
 from datetime import datetime, timedelta
 import urllib.request as libreq
 
+import yaml
+
 
 def get_attr(xml_str: str, attr: str) -> str:
     xml_attr = f"<{attr}>"
@@ -33,7 +35,7 @@ category = "quant-ph"
 max_results = 10_000  # max results to be sent by arxiv
 
 ##########################################################
-# process default inputs.
+# process default inputs
 
 # job scheduled at 00:05, so we want the results from
 # yesterday at 00:00 and today at 00:00.
@@ -76,6 +78,7 @@ data = data.decode("utf-8")
 
 ##########################################################
 # process XML data
+
 data = data.split("<entry>")
 data_format, data = data[0], data[1:]
 
@@ -88,11 +91,64 @@ assert (
 data_dict = {}
 for element in data:
     link = get_attr(element, "id")
+    date = get_attr(element, "published")
     title = get_attr(element, "title")
     summary = get_attr(element, "summary")
-    authors = [get_attr(x, "name") for x in get_attr_list(element, "author")]
-    data_dict[link] = dict(title=title, summary=summary, authors=authors)
+    authors = ", ".join(get_attr(x, "name") for x in get_attr_list(element, "author"))
+    data_dict[link] = dict(date=data, title=title, summary=summary, authors=authors)
 
 
 ##########################################################
 # run filters
+
+with open("filters.yaml", "r") as file:
+    filters = yaml.safe_load(file)
+
+assert set(filters) <= set(["title", "summary", "authors"])
+assert all(isinstance(w, list) for w in filters.values())
+
+filtered_data_dict = {}
+for link, attributes in data_dict.items():
+    for attr_name, keywords in filters.items():
+        # case unsensitive keywords
+        text = attributes[attr_name].lower()
+        for keyword in keywords:
+            if keyword.lower() in text:
+                filtered_data_dict[link] = attributes
+                continue
+
+##########################################################
+# create the email
+
+
+# need to use HTML because plain text does not allow for highlighting words
+def highlight_word(text, lower_text, lower_word):
+    if lower_word not in lower_text:
+        return text
+
+    sentences = lower_text.split(lower_word)
+    idx = 0
+    new_text = ""
+    for sentence in sentences[:-1]:
+        new_text += text[idx : idx + len(sentence)]
+        idx += len(sentence)
+        new_text += f'<span style="background-color: orange;">{text[idx:idx+len(lower_word)]}</span>'
+        idx += len(lower_word)
+    new_text += text[idx : idx + len(sentences[-1])]
+    return new_text
+
+
+formatted_data = {}
+for link, attributes in filtered_data_dict.items():
+    formatted_data[link] = attributes
+    for attr_name, keywords in filters.items():
+        for keyword in keywords:
+            text = formatted_data[link][attr_name]
+            formatted_data[link][attr_name] = highlight_word(
+                text, text.lower(), keyword.lower()
+            )
+    # remove newlines in title
+    formatted_data[link]["title"] = formatted_data[link]["title"].replace("\n", "")
+
+
+print([i["title"] for i in formatted_data.values()])
