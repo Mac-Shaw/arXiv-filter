@@ -35,6 +35,6 @@ jobs:
           password: ${{secrets.MAIL_PASSWORD}}
           subject: filtered arxiv submissions
           to: m.serraperalta@tudelft.nl
-          from: marcserraperalta@gmail.com
+          from: Marc Serra Peralta
           html_body: file://formatted_email.html
           ignore_cert: true
