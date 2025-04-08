@@ -2,7 +2,6 @@ title:
 - decoder
 - decoding
 - qec
-- qecc
 - quantum error correction
 - soft-information
 - surface code
@@ -13,7 +12,6 @@ title:
 - magic state
 summary:
 - qec
-- qecc
 - quantum error correction
 - soft-information
 - surface code
@@ -29,3 +27,9 @@ authors:
 - Earl T. Campbell
 - Ophelia Crawford
 - Craig Gidney
+- Mackenzie H. Shaw
+- Marc Serra-Peralta
+- Joschka Roffe
+- Andreas Wallraff
+- Mikhail D. Lukin
+- Dolev Bluvstein
