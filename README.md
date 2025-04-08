@@ -2,7 +2,7 @@
 
 Filters the daily arXiv submissions and only sends (via email) the relevant ones based on a set of keywords and author list.
 
-This filter does not require any local installation and runs on (free) Github runners!
+:white_check_mark: **This filter is very easy to set up**! It does not require any local installation and runs on (free) Github runners! :white_check_mark:
 
 ![alt text](https://github.com/MarcSerraPeralta/arXiv-filter/blob/main/example_email.png?raw=true)
 
