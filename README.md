@@ -2,7 +2,7 @@
 
 Filters the arXiv submissions and only sends the relevant ones based on a set of keywords
 
-![alt text](https://github.com/MarcSerraPeralta/arXiv-filter/blob/main/example_email.jpg?raw=true)
+![alt text](https://github.com/MarcSerraPeralta/arXiv-filter/blob/main/example_email.png?raw=true)
 
 
 ## What to set up after forking this repo
