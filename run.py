@@ -1,6 +1,7 @@
 import sys
 from datetime import datetime, timedelta
 import urllib.request as libreq
+import argparse
 
 import yaml
 
@@ -43,15 +44,30 @@ def highlight_word(text, lower_text, lower_word):
     return new_text
 
 
-# TODO: argparse
+##########################################################
+# get the arguments
 
-# load arguments (use argparse)
-day = "2025-03-07"  # None
-category = "quant-ph"
-max_results = 10_000  # max results to be sent by arxiv
+parser = argparse.ArgumentParser(description="Filter for arxiv submissions")
+parser.add_argument(
+    "-d",
+    "--day",
+    help="This script will process new submissions up to specified day (YYYY-MM-DD) at 0:00",
+    type=str,
+    default=None,
+)
+parser.add_argument(
+    "-c", "--category", help="arXiv category", type=str, default="quant-ph"
+)
+parser.add_argument(
+    "--max-results", help="Maximum number of submissions to get from arXiv", type=int, default=10_000
+)
+args = vars(parser.parse_args())
 
 ##########################################################
 # process default inputs
+day = args["day"]
+max_results = args["max_results"]
+category = args["category"]
 
 # job scheduled at 00:05, so we want the results from
 # yesterday at 00:00 and today at 00:00.
@@ -129,7 +145,7 @@ for keywords in filters.values():
         # the arxiv submissions that one wants but they will create an incorrect
         # HTML format, .e.g. <span...>q<span...>ldpc</span></span> if qldpc and ldpc
         # are both keywords
-        assert keyword not in "".join(keywords[:k] + keywords[k+1:])
+        assert keyword not in "".join(keywords[:k] + keywords[k + 1 :])
 
 filtered_data_dict = {}
 for link, attributes in data_dict.items():
@@ -183,4 +199,5 @@ for link, attrs in formatted_data.items():
 formatted_entries = "\n".join(formatted_entries)
 formatted_email = template_email.format(body=formatted_entries)
 
-print(formatted_email)
+with open("formatted_email.html", "w") as file:
+    file.write(formatted_email)
