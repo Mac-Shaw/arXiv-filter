@@ -1,6 +1,6 @@
 # arXiv-filter
 
-Filters the arXiv submissions and only sends the relevant ones based on a set of keywords
+Filters the daily arXiv submissions and only sends (via email) the relevant ones based on a set of keywords.
 
 ![alt text](https://github.com/MarcSerraPeralta/arXiv-filter/blob/main/example_email.png?raw=true)
 
