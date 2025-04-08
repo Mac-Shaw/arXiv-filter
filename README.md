@@ -5,7 +5,7 @@ Filters the arXiv submissions and only sends the relevant ones based on a set of
 ![alt text](https://github.com/MarcSerraPeralta/arXiv-filter/blob/main/example_email.png?raw=true)
 
 
-## What to set up after forking this repo
+## How can you use it?
 
 The requirements to run the `arXiv-filter` are the following:
 - have a Gmail account
@@ -13,6 +13,10 @@ The requirements to run the `arXiv-filter` are the following:
 - have an App Password for this account (see [create an app password](https://support.google.com/accounts/answer/185833?hl=en))
 
 This steps are required so that Github can send an email on your behalf.
+
+### Fork this repository
+
+Fork the repository in Github to copy all its contents and be able to edit them.
 
 ### Add Github (repository) secrets
 
