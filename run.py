@@ -27,6 +27,22 @@ def get_attr_list(xml_str: str, attr: str) -> list[str]:
     return attr_list
 
 
+def highlight_word(text, lower_text, lower_word):
+    if lower_word not in lower_text:
+        return text
+
+    sentences = lower_text.split(lower_word)
+    idx = 0
+    new_text = ""
+    for sentence in sentences[:-1]:
+        new_text += text[idx : idx + len(sentence)]
+        idx += len(sentence)
+        new_text += f'<span style="background-color: orange;">{text[idx:idx+len(lower_word)]}</span>'
+        idx += len(lower_word)
+    new_text += text[idx : idx + len(sentences[-1])]
+    return new_text
+
+
 # TODO: argparse
 
 # load arguments (use argparse)
@@ -95,7 +111,7 @@ for element in data:
     title = get_attr(element, "title")
     summary = get_attr(element, "summary")
     authors = ", ".join(get_attr(x, "name") for x in get_attr_list(element, "author"))
-    data_dict[link] = dict(date=data, title=title, summary=summary, authors=authors)
+    data_dict[link] = dict(date=date, title=title, summary=summary, authors=authors)
 
 
 ##########################################################
@@ -104,51 +120,67 @@ for element in data:
 with open("filters.yaml", "r") as file:
     filters = yaml.safe_load(file)
 
+# check filters
 assert set(filters) <= set(["title", "summary", "authors"])
 assert all(isinstance(w, list) for w in filters.values())
+for keywords in filters.values():
+    for k, keyword in enumerate(keywords):
+        # check that there are no overlapping keywords because they will not alter
+        # the arxiv submissions that one wants but they will create an incorrect
+        # HTML format, .e.g. <span...>q<span...>ldpc</span></span> if qldpc and ldpc
+        # are both keywords
+        assert keyword not in "".join(keywords[:k] + keywords[k+1:])
 
 filtered_data_dict = {}
 for link, attributes in data_dict.items():
     for attr_name, keywords in filters.items():
-        # case unsensitive keywords
-        text = attributes[attr_name].lower()
         for keyword in keywords:
-            if keyword.lower() in text:
+            # case unsensitive keywords
+            if keyword.lower() in attributes[attr_name].lower():
                 filtered_data_dict[link] = attributes
                 continue
 
 ##########################################################
 # create the email
 
-
-# need to use HTML because plain text does not allow for highlighting words
-def highlight_word(text, lower_text, lower_word):
-    if lower_word not in lower_text:
-        return text
-
-    sentences = lower_text.split(lower_word)
-    idx = 0
-    new_text = ""
-    for sentence in sentences[:-1]:
-        new_text += text[idx : idx + len(sentence)]
-        idx += len(sentence)
-        new_text += f'<span style="background-color: orange;">{text[idx:idx+len(lower_word)]}</span>'
-        idx += len(lower_word)
-    new_text += text[idx : idx + len(sentences[-1])]
-    return new_text
-
-
+# need to use HTML because plain text does not allow to highlight words
 formatted_data = {}
-for link, attributes in filtered_data_dict.items():
-    formatted_data[link] = attributes
+for link, attrs in filtered_data_dict.items():
+    formatted_data[link] = attrs
     for attr_name, keywords in filters.items():
         for keyword in keywords:
             text = formatted_data[link][attr_name]
             formatted_data[link][attr_name] = highlight_word(
                 text, text.lower(), keyword.lower()
             )
+
     # remove newlines in title
     formatted_data[link]["title"] = formatted_data[link]["title"].replace("\n", "")
 
+    # format date
+    formatted_data[link]["date"] = (
+        formatted_data[link]["date"].replace("T", " ").replace("Z", "")
+    )
 
-print([i["title"] for i in formatted_data.values()])
+# load template for email and for each arxiv entry
+with open("email.html", "r") as file:
+    template_email = file.read()
+with open("email_arxiv-element.html", "r") as file:
+    template_entry = file.read()
+
+formatted_entries = []
+for link, attrs in formatted_data.items():
+    formatted_entry = template_entry.format(
+        formatted_title=attrs["title"],
+        formatted_authors=attrs["authors"],
+        formatted_summary=attrs["summary"],
+        formatted_date=attrs["date"],
+        link=link,
+        id=link,
+    )
+    formatted_entries.append(formatted_entry)
+
+formatted_entries = "\n".join(formatted_entries)
+formatted_email = template_email.format(body=formatted_entries)
+
+print(formatted_email)

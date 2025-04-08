@@ -8,6 +8,7 @@ title:
 - color code
 - mwpm
 - ldpc
+- low-density parity-check
 - lattice surgery
 - magic state
 summary:
@@ -17,7 +18,8 @@ summary:
 - surface code
 - color code
 - mwpm
-- lpdc
+- ldpc 
+- low-density parity-check
 - lattice surgery
 - magic state
 authors:
@@ -33,3 +35,5 @@ authors:
 - Andreas Wallraff
 - Mikhail D. Lukin
 - Dolev Bluvstein
+- Joonas Majaniemi
+- Leonardo DiCarlo
