@@ -32,7 +32,7 @@ Then create the following secrets:
 - `MAIL_USERNAME` containing your email (e.g. `example@gmail.com`)
 - `MAIL_PASSWORD` containing the App Password for this account (e.g. `aaaa aaaa aaaa aaaa`)
 
-## 3. Specify `from` and `to` for the emails
+### 3. Specify `from` and `to` for the emails
 
 Go to the file `arXiv-filter/.github/workflows/automatic_filter.yaml` and edit lines 37 and 38:
 ```
@@ -44,7 +44,7 @@ to specify the email where you want to receive the automatic emails (it can be t
 Optionally, if you want to be able to manually trigger the arXiv processing and 'automatic' email,
 then also edit the `arXiv-filter/.github/workflows/manual_filter.yaml` file.
 
-## 4. Add your keywords
+### 4. Add your keywords
 
 Add/Delete/Change the keywords you want to use for filtering in `filters.yaml`.
 You can specify keywords to be searched in the title, summary/abstract, and authors.
