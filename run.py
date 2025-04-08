@@ -59,7 +59,10 @@ parser.add_argument(
     "-c", "--category", help="arXiv category", type=str, default="quant-ph"
 )
 parser.add_argument(
-    "--max-results", help="Maximum number of submissions to get from arXiv", type=int, default=10_000
+    "--max-results",
+    help="Maximum number of submissions to get from arXiv",
+    type=int,
+    default=10_000,
 )
 args = vars(parser.parse_args())
 
@@ -195,6 +198,10 @@ for link, attrs in formatted_data.items():
         id=link,
     )
     formatted_entries.append(formatted_entry)
+
+if len(formatted_entries) == 0:
+    # no arXiv submissions matching the filters
+    formatted_entries = ["<p>No submissions matching the filters have been found.</p>"]
 
 formatted_entries = "\n".join(formatted_entries)
 formatted_email = template_email.format(body=formatted_entries)
