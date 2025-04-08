@@ -12,13 +12,15 @@ The requirements to run the `arXiv-filter` are the following:
 - have 2-step verification enabled in this account (see [how to set up 2-step verification](https://support.google.com/accounts/answer/185839?hl=en&co=GENIE.Platform%3DAndroid)) 
 - have an App Password for this account (see [create an app password](https://support.google.com/accounts/answer/185833?hl=en))
 
-This steps are required so that Github can send an email on your behalf.
+These items are required so that Github can send an email on your behalf.
 
-### Fork this repository
+If you want to set up your arXiv filter, please follow these steps.
+
+### 1. Fork this repository
 
 Fork the repository in Github to copy all its contents and be able to edit them.
 
-### Add Github (repository) secrets
+### 2. Add Github (repository) secrets
 
 For Github to securely send an email on your behalf, you need to set up two secrets in this repository.
 The secrets allow to store your usename and password securely so that only you and Github know them.
@@ -30,7 +32,7 @@ Then create the following secrets:
 - `MAIL_USERNAME` containing your email (e.g. `example@gmail.com`)
 - `MAIL_PASSWORD` containing the App Password for this account (e.g. `aaaa aaaa aaaa aaaa`)
 
-## Specify `from` and `to` for the emails
+## 3. Specify `from` and `to` for the emails
 
 Go to the file `arXiv-filter/.github/workflows/automatic_filter.yaml` and edit lines 37 and 38:
 ```
@@ -42,7 +44,7 @@ to specify the email where you want to receive the automatic emails (it can be t
 Optionally, if you want to be able to manually trigger the arXiv processing and 'automatic' email,
 then also edit the `arXiv-filter/.github/workflows/manual_filter.yaml` file.
 
-## Add your keywords
+## 4. Add your keywords
 
 Add/Delete/Change the keywords you want to use for filtering in `filters.yaml`.
 You can specify keywords to be searched in the title, summary/abstract, and authors.
