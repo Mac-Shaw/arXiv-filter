@@ -1,5 +1,5 @@
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import urllib.request as libreq
 import argparse
 
@@ -72,11 +72,12 @@ day = args["day"]
 max_results = args["max_results"]
 category = args["category"]
 
-# job scheduled at 00:05, so we want the results from
-# yesterday at 00:00 and today at 00:00.
-day_datetime = datetime.today()
+# job scheduled at 00:05 UTC, so we want the results from
+# yesterday at 00:00 UTC and today at 00:00 UTC.
+day_datetime = datetime.now(timezone.utc).date()
 if day is not None:
     day_datetime = datetime.strptime(day, "%Y-%m-%d")
+print("input day:", day_datetime.strftime("%Y-%m-%d"))  # debugging
 
 # cancel job if it is saturday or sunday
 if day_datetime.weekday() in [5, 6]:
@@ -105,6 +106,7 @@ yesterday = (day_datetime - timedelta(days=day_window)).strftime("%Y%m%d") + "00
 query = query_format.format(
     category=category, yesterday=yesterday, today=today, max_results=max_results
 )
+print("query:", query)  # debugging
 with libreq.urlopen(query) as url:
     data = url.read()
 
@@ -204,7 +206,9 @@ if len(formatted_entries) == 0:
     formatted_entries = ["<p>No submissions matching the filters have been found.</p>"]
 
 formatted_entries = "\n".join(formatted_entries)
-formatted_email = template_email.format(body=formatted_entries)
+formatted_email = template_email.format(
+    body=formatted_entries, today=today, yesterday=yesterday
+)
 
 with open("formatted_email.html", "w") as file:
     file.write(formatted_email)
