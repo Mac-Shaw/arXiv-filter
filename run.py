@@ -72,7 +72,7 @@ day = args["day"]
 max_results = args["max_results"]
 category = args["category"]
 
-# job scheduled at 00:05 UTC, so we want the results from
+# job scheduled at 05:00 UTC. We want the results from
 # yesterday at 00:00 UTC and today at 00:00 UTC.
 day_datetime = datetime.now(timezone.utc).date()
 if day is not None:
