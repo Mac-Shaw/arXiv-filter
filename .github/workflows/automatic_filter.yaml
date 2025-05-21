@@ -2,7 +2,7 @@ name: automatic_filter
 
 on:
   schedule:
-    - cron: "10 7 * * 1-5" # every working day at 07:10 UTC time
+    - cron: "0 5 * * 1-5" # every working day at 05:00 UTC time
 
 jobs:
   build:

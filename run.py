@@ -72,8 +72,9 @@ day = args["day"]
 max_results = args["max_results"]
 category = args["category"]
 
-# job scheduled at 05:00 UTC. We want the results from
-# yesterday at 00:00 UTC and today at 00:00 UTC.
+# job scheduled at 05:00 UTC (today).
+# Arxiv send the email at 0:00 UTC today with the results from:
+# 18:00 UTC two days ago - 18:00 UTC yesterday.
 day_datetime = datetime.now(timezone.utc).date()
 if day is not None:
     day_datetime = datetime.strptime(day, "%Y-%m-%d")
@@ -96,15 +97,15 @@ if max_results > 10_000:
 
 ##########################################################
 # format of the querry
-query_format = "http://export.arxiv.org/api/query?search_query=cat:{category}+AND+submittedDate:[{yesterday}+TO+{today}]&max_results={max_results}"
+query_format = "http://export.arxiv.org/api/query?search_query=cat:{category}+AND+submittedDate:[{day_0}+TO+{day_1}]&max_results={max_results}"
 
-# prepare today and yesterday dates at midnigh for arxiv format: YYYYMMDDTTTT
-today = day_datetime.strftime("%Y%m%d") + "0000"
-yesterday = (day_datetime - timedelta(days=day_window)).strftime("%Y%m%d") + "0000"
+# prepare '18:00 UTC two days ago' and '18:00 UTC yesterday' dates for arxiv format: YYYYMMDDTTTT
+day_1 = (day_datetime - timedelta(days=1)).strftime("%Y%m%d") + "1800"
+day_0 = (day_datetime - timedelta(days=1 + day_window)).strftime("%Y%m%d") + "1800"
 
 # run query
 query = query_format.format(
-    category=category, yesterday=yesterday, today=today, max_results=max_results
+    category=category, day_0=day_0, day_1=day_1, max_results=max_results
 )
 print("query:", query)  # debugging
 with libreq.urlopen(query) as url:
