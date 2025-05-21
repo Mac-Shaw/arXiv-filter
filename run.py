@@ -208,7 +208,7 @@ if len(formatted_entries) == 0:
 
 formatted_entries = "\n".join(formatted_entries)
 formatted_email = template_email.format(
-    body=formatted_entries, today=today, yesterday=yesterday
+    body=formatted_entries, day_1=day_1, day_0=day_0
 )
 
 with open("formatted_email.html", "w") as file:
