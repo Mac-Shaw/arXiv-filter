@@ -6,6 +6,7 @@ Filters the daily arXiv submissions and only sends (via email) the relevant ones
 
 ![alt text](https://github.com/MarcSerraPeralta/arXiv-filter/blob/main/example_email.png?raw=true)
 
+_Note: The email is sent at 5:00 UTC instead of 0:00 UTC (as done by the arXiv) to avoid any possible problem with fetching the submissions from arXiv_
 
 ## How can you use it?
 
