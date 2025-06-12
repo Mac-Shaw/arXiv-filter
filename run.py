@@ -1,4 +1,6 @@
 import sys
+import time
+import random
 from datetime import datetime, timedelta, timezone
 import urllib.request as libreq
 import argparse
@@ -108,8 +110,31 @@ query = query_format.format(
     category=category, day_0=day_0, day_1=day_1, max_results=max_results
 )
 print("query:", query)  # debugging
-with libreq.urlopen(query) as url:
-    data = url.read()
+
+# avoid error 'ConnectionResetError: [Errno 104] Connection reset by peer'
+success = False
+num_attempts, max_num_attempts = 0, 100
+while (not success) or (num_attempts > max_num_attempts):
+    try:
+        with libreq.urlopen(query) as url:
+            data = url.read()
+        success = True
+    except:
+        # wait between 1 and 2 seconds, do it randomly to avoid detection
+        # of data scrapping
+        time.sleep(1 + random.random())
+        num_attempts += 1
+
+# if data scrapping not successful, send email about it
+if not success:
+    with open("email.html", "r") as file:
+        template_email = file.read()
+    formatted_email = template_email.format(
+        body="An error occurred in the GitHub action", day_1=day_1, day_0=day_0
+    )
+    with open("formatted_email.html", "w") as file:
+        file.write(formatted_email)
+    sys.exit()
 
 # the output of the url is in byte format, not string format
 data = data.decode("utf-8")
