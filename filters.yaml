@@ -11,6 +11,8 @@ title:
 - low-density parity-check
 - lattice surgery
 - magic state
+- fault-tolerant
+- fault tolerance
 summary:
 - qec
 - quantum error correction
@@ -22,6 +24,8 @@ summary:
 - low-density parity-check
 - lattice surgery
 - magic state
+- fault-tolerant
+- fault tolerance
 authors:
 - Google
 - Boris M. Varbanov
