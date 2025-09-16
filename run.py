@@ -80,7 +80,7 @@ category = args["category"]
 day_datetime = datetime.now(timezone.utc).date()
 if day is not None:
     day_datetime = datetime.strptime(day, "%Y-%m-%d")
-print("input day:", day_datetime.strftime("%Y-%m-%d"))  # debugging
+print("input day:", day_datetime.strftime("%Y-%m-%d"))  # for debugging
 
 # cancel job if it is saturday or sunday
 if day_datetime.weekday() in [5, 6]:
@@ -109,7 +109,7 @@ day_0 = (day_datetime - timedelta(days=1 + day_window)).strftime("%Y%m%d") + "18
 query = query_format.format(
     category=category, day_0=day_0, day_1=day_1, max_results=max_results
 )
-print("query:", query)  # debugging
+print("query:", query)  # for debugging
 
 # avoid error 'ConnectionResetError: [Errno 104] Connection reset by peer'
 success = False
@@ -238,3 +238,5 @@ formatted_email = template_email.format(
 
 with open("formatted_email.html", "w") as file:
     file.write(formatted_email)
+
+print(formatted_email) # for debugging
