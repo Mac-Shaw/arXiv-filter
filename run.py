@@ -1,33 +1,40 @@
 import sys
-import time
-import random
-from datetime import datetime, timedelta, timezone
 import urllib.request as libreq
-import argparse
 
 import yaml
 
 
-def get_attr(xml_str: str, attr: str) -> str:
-    xml_attr = f"<{attr}>"
-    if not xml_attr in xml_str:
-        raise ValueError(f"Attribute '{attr}' not found in '{xml_str}'.")
-
-    idx1 = xml_str.index(xml_attr) + len(xml_attr)
-    idx2 = xml_str.index(f"</{attr}>")
-    return xml_str[idx1:idx2]
+def get_title(html_str: str) -> str:
+    prefix = '<h1 class="title mathjax"><span class="descriptor">Title:</span>'
+    start_idx = html_str.index(prefix) + len(prefix)
+    end_idx = html_str[start_idx:].index("</h1>") + start_idx
+    return html_str[start_idx:end_idx]
 
 
-def get_attr_list(xml_str: str, attr: str) -> list[str]:
-    attr_list = []
-    xml_attr_1 = f"<{attr}>"
-    xml_attr_2 = f"</{attr}>"
-    for _ in range(xml_str.count(xml_attr_1)):
-        idx1 = xml_str.index(xml_attr_1) + len(xml_attr_1)
-        idx2 = xml_str.index(xml_attr_2)
-        attr_list.append(xml_str[idx1:idx2])
-        xml_str = xml_str[idx2 + len(xml_attr_2) :]
-    return attr_list
+def get_summary(html_str: str) -> str:
+    prefix = '<span class="descriptor">Abstract:</span>'
+    start_idx = html_str.index(prefix) + len(prefix)
+    end_idx = html_str[start_idx:].index("</blockquote>") + start_idx
+    return html_str[start_idx:end_idx]
+
+
+def get_authors(html_str: str) -> list[str]:
+    prefix = '<div class="authors"><span class="descriptor">Authors:</span>'
+    start_idx = html_str.index(prefix) + len(prefix)
+    end_idx = html_str[start_idx:].index("</div>") + start_idx
+    authors_block = html_str[start_idx:end_idx]
+
+    authors = []
+    while "<a href=" in authors_block:
+        prefix = 'rel="nofollow">'
+        start_idx = authors_block.index(prefix) + len(prefix)
+        end_idx = authors_block[start_idx:].index("</a>") + start_idx
+        authors.append(authors_block[start_idx:end_idx])
+
+        # remove author
+        authors_block = authors_block[end_idx:]
+
+    return authors
 
 
 def highlight_word(text, lower_text, lower_word):
@@ -47,123 +54,120 @@ def highlight_word(text, lower_text, lower_word):
 
 
 ##########################################################
-# get the arguments
-
-parser = argparse.ArgumentParser(description="Filter for arxiv submissions")
-parser.add_argument(
-    "-d",
-    "--day",
-    help="This script will process new submissions up to specified day (YYYY-MM-DD) at 0:00",
-    type=str,
-    default=None,
-)
-parser.add_argument(
-    "-c", "--category", help="arXiv category", type=str, default="quant-ph"
-)
-parser.add_argument(
-    "--max-results",
-    help="Maximum number of submissions to get from arXiv",
-    type=int,
-    default=10_000,
-)
-args = vars(parser.parse_args())
+# inputs
+category = "quant-ph"
 
 ##########################################################
 # process default inputs
-day = args["day"]
-max_results = args["max_results"]
-category = args["category"]
+
+# using arXiv's "new submissions" website for more consistent results than its API.
+# With the API, some entries from yesterday were not given, even though they felt
+# inside the search parameters specified.
 
 # job scheduled at 05:00 UTC (today).
 # Arxiv send the email at 0:00 UTC today with the results from:
 # 18:00 UTC two days ago - 18:00 UTC yesterday.
-day_datetime = datetime.now(timezone.utc).date()
-if day is not None:
-    day_datetime = datetime.strptime(day, "%Y-%m-%d")
-print("input day:", day_datetime.strftime("%Y-%m-%d"))  # for debugging
 
-# cancel job if it is saturday or sunday
-if day_datetime.weekday() in [5, 6]:
-    sys.exit(0)
+query_template = "https://arxiv.org/list/quant-ph/new?skip={skip}&show={show}"
 
-# get the window of days to extract the submissions.
-# if the day is monday, it should load submissions from friday, saturday and sunday
-day_window = 1
-if day_datetime.weekday() == 0:
-    day_window = 3
+# get today's number of submissions
+query = query_template.format(skip=0, show=2000)
+with libreq.urlopen(query) as url:
+    data = url.read()
+data = data.decode("utf8")
 
-if max_results > 10_000:
-    raise ValueError(
-        f"arXiv only allows a maximum number of results <=10000, but {max_results} was given."
-    )
+# get today's date
+string = "<h3>Showing new listings for "
+start_index = data.find(string) + len(string)
+end_index = data[start_index:].find("</h3>\n") + start_index
+date = data[start_index:end_index]
+print("Date:", date)
 
-##########################################################
-# format of the querry
-query_format = "http://export.arxiv.org/api/query?search_query=cat:{category}+AND+submittedDate:[{day_0}+TO+{day_1}]&max_results={max_results}"
-
-# prepare '18:00 UTC two days ago' and '18:00 UTC yesterday' dates for arxiv format: YYYYMMDDTTTT
-day_1 = (day_datetime - timedelta(days=1)).strftime("%Y%m%d") + "1800"
-day_0 = (day_datetime - timedelta(days=1 + day_window)).strftime("%Y%m%d") + "1800"
-
-# run query
-query = query_format.format(
-    category=category, day_0=day_0, day_1=day_1, max_results=max_results
-)
-print("query:", query)  # for debugging
-
-# avoid error 'ConnectionResetError: [Errno 104] Connection reset by peer'
-success = False
-num_attempts, max_num_attempts = 0, 100
-while (not success) or (num_attempts > max_num_attempts):
-    try:
-        with libreq.urlopen(query) as url:
-            data = url.read()
-        success = True
-    except:
-        # wait between 1 and 2 seconds, do it randomly to avoid detection
-        # of data scrapping
-        time.sleep(1 + random.random())
-        num_attempts += 1
-
-# if data scrapping not successful, send email about it
-if not success:
+if date == "":
     with open("email.html", "r") as file:
         template_email = file.read()
     formatted_email = template_email.format(
-        body="An error occurred in the GitHub action", day_1=day_1, day_0=day_0
+        body="Bad formatted arXiv data, please check the GitHub Actions",
+        date=date,
+    )
+    with open("formatted_email.html", "w") as file:
+        file.write(formatted_email)
+
+    print(data)  # for debugging
+    sys.exit()
+
+# check if there are entries today
+if "<p>No updates today.</p>" in data:
+    with open("email.html", "r") as file:
+        template_email = file.read()
+    formatted_email = template_email.format(
+        body="No submissions matching the filters have been found.",
+        date=date,
     )
     with open("formatted_email.html", "w") as file:
         file.write(formatted_email)
     sys.exit()
 
-# the output of the url is in byte format, not string format
-data = data.decode("utf-8")
+# check number of entries
+num_submissions = None
+for line in data.split("\n"):
+    if "<h3>New submissions (showing " in line:
+        num_submissions = int(line.lstrip().rstrip().split(" ")[-2])
+        break
 
-##########################################################
-# process XML data
+print("Number of submissions:", num_submissions)
 
-data = data.split("<entry>")
-data_format, data = data[0], data[1:]
+if num_submissions is None:
+    with open("email.html", "r") as file:
+        template_email = file.read()
+    formatted_email = template_email.format(
+        body="Bad formatted arXiv data, please check the GitHub Actions",
+        date=date,
+    )
+    with open("formatted_email.html", "w") as file:
+        file.write(formatted_email)
 
-# ensure that the format is the expected one
-assert (
-    '<?xml version="1.0" encoding="UTF-8"?>\n<feed xmlns="http://www.w3.org/2005/Atom">'
-    in data_format
-)
+    print(data)  # for debugging
+    sys.exit()
 
+# get arXiv subsmissions
+arxiv_entries = []
+for k in range(num_submissions // 2000 + 1):
+    query = query_template.format(skip=2000 * k, show=2000)
+    with libreq.urlopen(query) as url:
+        data = url.read()
+    data = data.decode("utf8")
+
+    prefix = '<a href ="/abs/'
+
+    for line in data.split("\n"):
+        if "<h3>Cross submissions (showing" in line:
+            break
+        if "<h3>Replacement submissions (showing" in line:
+            break
+        if (prefix in line) and (' title="Abstract" id=' in line):
+            # arXiv entry
+            line = line.rstrip().lstrip()
+            start_index = len(prefix)
+            end_index = line.index('" title=')
+            arxiv_entries.append(line[start_index:end_index])
+
+print("Arxiv entries:", arxiv_entries)  # debugging
+
+# get data for each arXiv submission
 data_dict = {}
-for element in data:
-    link = get_attr(element, "id")
-    date = get_attr(element, "published")
-    title = get_attr(element, "title")
-    summary = get_attr(element, "summary")
-    authors = ", ".join(get_attr(x, "name") for x in get_attr_list(element, "author"))
-    data_dict[link] = dict(date=date, title=title, summary=summary, authors=authors)
+for entry in arxiv_entries:
+    link = "https://arxiv.org/abs/" + entry
+    with libreq.urlopen(link) as url:
+        data = url.read()
+    data = data.decode("utf8")
 
+    title = get_title(data)
+    summary = get_summary(data)
+    authors = ", ".join(get_authors(data))
+    data_dict[link] = dict(title=title, summary=summary, authors=authors)
 
-##########################################################
 # run filters
-
 with open("filters.yaml", "r") as file:
     filters = yaml.safe_load(file)
 
@@ -204,11 +208,6 @@ for link, attrs in filtered_data_dict.items():
     # remove newlines in title
     formatted_data[link]["title"] = formatted_data[link]["title"].replace("\n", "")
 
-    # format date
-    formatted_data[link]["date"] = (
-        formatted_data[link]["date"].replace("T", " ").replace("Z", "")
-    )
-
 # load template for email and for each arxiv entry
 with open("email.html", "r") as file:
     template_email = file.read()
@@ -221,7 +220,6 @@ for link, attrs in formatted_data.items():
         formatted_title=attrs["title"],
         formatted_authors=attrs["authors"],
         formatted_summary=attrs["summary"],
-        formatted_date=attrs["date"],
         link=link,
         id=link,
     )
@@ -233,10 +231,11 @@ if len(formatted_entries) == 0:
 
 formatted_entries = "\n".join(formatted_entries)
 formatted_email = template_email.format(
-    body=formatted_entries, day_1=day_1, day_0=day_0
+    body=formatted_entries,
+    date=date,
 )
 
 with open("formatted_email.html", "w") as file:
     file.write(formatted_email)
 
-print(formatted_email) # for debugging
+print("Formatted email:\n", formatted_email)  # for debugging
