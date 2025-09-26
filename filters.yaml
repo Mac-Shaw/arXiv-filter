@@ -3,9 +3,16 @@ title:
 - decoding
 - qec
 - quantum error correction
+- space-time code
 - soft-information
 - surface code
 - color code
+- bivariate bicycle
+- two-block group algebra
+- bosonic
+- gkp
+- cat
+- binomial
 - mwpm
 - ldpc
 - low-density parity-check
@@ -13,42 +20,69 @@ title:
 - magic state
 - fault-tolerant
 - fault tolerance
+- superconducting circuit
+- superconducting qubit
 summary:
+- decoder
+- decoding
 - qec
 - quantum error correction
+- space-time code
 - soft-information
 - surface code
 - color code
+- bivariate bicycle
+- two-block group algebra
+- bosonic
+- gkp
+- cat
+- binomial
 - mwpm
-- ldpc 
+- ldpc
 - low-density parity-check
 - lattice surgery
 - magic state
 - fault-tolerant
 - fault tolerance
+- superconducting circuit
+- superconducting qubit
 authors:
-- Google
-- Boris M. Varbanov
+- Mackenzie H. Shaw
+- Arne L. Grimsmo
+- Andrew C. Doherty
+- Evan T. Hockings
+- Nicholas Fazio
+- Xanda Kolesnikow
+- Marc Serra Peralta
 - Barbara M. Terhal
+- Boris M. Varbanov
+- Maarten Stroeks
+- Maarten E. Stroeks
+- Minh T. P. Nguyen
+- Kathleen Chang
+- Adam Wills
+- Louis Golowich
+- Anasuya Lyons
+- Benjamin J. Brown
+- Theodore J. Yoder
+- Emily Pritchett
+- Andrew W. Cross
+- Malcolm Carroll
+- Michael E. Beverland
+- Jay M. Gambetta
+- Shraddha Singh
+- Bence Hetényi
 - Earl T. Campbell
 - Ophelia Crawford
-- Craig Gidney
-- Mackenzie H. Shaw
-- Marc Serra-Peralta
-- Joschka Roffe
-- Andreas Wallraff
 - Mikhail D. Lukin
 - Dolev Bluvstein
-- Joonas Majaniemi
 - Leonardo DiCarlo
-- Kenneth R. Brown
-- Kenneth Brown
 - Oscar Higgott
 - Madelyn Cain
+- Craig Gidney
 - Matt McEwen
-- Jay M. Gambetta
+- Dripto M. Debroy
 - György P. Gehér
 - David Byfield
-- Shruti Puri
 - Christopher A. Pattison
 - Kaavya Sahay
